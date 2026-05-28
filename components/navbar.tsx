@@ -1,6 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { useRef, MouseEvent } from 'react';
 import Image from 'next/image';
 
 interface NavbarProps {
@@ -27,6 +28,56 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
   </svg>
 );
+
+const MagneticNavItem = ({ label, onClick }: { label: string; onClick: () => void }) => {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 150, damping: 15, mass: 0.1 });
+  const springY = useSpring(y, { stiffness: 150, damping: 15, mass: 0.1 });
+
+  const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    x.set((e.clientX - centerX) * 0.4);
+    y.set((e.clientY - centerY) * 0.4);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ x: springX, y: springY }}
+      whileTap={{ scale: 0.95 }}
+      className="group relative flex items-center gap-1 text-base sm:text-lg font-bold text-[#1A1A2E]/60 hover:text-[#1A1A2E] transition-colors duration-300 cursor-pointer px-2 py-1"
+    >
+      {label}
+      {label === 'Contact' && (
+        <svg 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2.5" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+        >
+          <line x1="7" y1="17" x2="17" y2="7" />
+          <polyline points="7 7 17 7 17 17" />
+        </svg>
+      )}
+    </motion.button>
+  );
+};
 
 export default function Navbar({ activeSlide, goToSlide }: NavbarProps) {
   return (
@@ -56,32 +107,10 @@ export default function Navbar({ activeSlide, goToSlide }: NavbarProps) {
         </div>
 
         {/* Nav Items (Aligned to start after the logo + spacer) */}
-        <div className="hidden lg:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-4">
           {['Home', 'Problems', 'Services', 'Pricing', 'Studio', 'Why Us', 'Contact'].map(
             (label, i) => (
-              <motion.button
-                key={label}
-                onClick={() => goToSlide(i)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="group flex items-center gap-1 text-base sm:text-lg font-bold text-[#1A1A2E]/60 hover:text-[#1A1A2E] transition-all duration-300 cursor-pointer"
-              >
-                {label}
-                {label === 'Contact' && (
-                  <svg 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2.5" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                  >
-                    <line x1="7" y1="17" x2="17" y2="7" />
-                    <polyline points="7 7 17 7 17 17" />
-                  </svg>
-                )}
-              </motion.button>
+              <MagneticNavItem key={label} label={label} onClick={() => goToSlide(i)} />
             )
           )}
         </div>

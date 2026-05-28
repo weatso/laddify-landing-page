@@ -1,47 +1,112 @@
 'use client';
 
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 function FluidMesh() {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
-  
-  const mouse = useRef(new THREE.Vector2(0.5, 0.5));
-  const targetMouse = useRef(new THREE.Vector2(0.5, 0.5));
+  const { viewport, size } = useThree();
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      targetMouse.current.x = e.clientX / window.innerWidth;
-      targetMouse.current.y = 1.0 - (e.clientY / window.innerHeight);
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+  // ─── ENGINE 1: 2D CANVAS TRAIL SYSTEM (PENGGANTI FBO YANG AMAN) ───
+  const trailCanvas = useMemo(() => {
+    if (typeof document !== 'undefined') {
+      const canvas = document.createElement('canvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      return canvas;
+    }
+    return null;
   }, []);
 
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uMouse: { value: new THREE.Vector2(0.5, 0.5) },
-      uResolution: { value: new THREE.Vector2(1, 1) },
-      uColor1: { value: new THREE.Color('#FF3CAC') },
-      uColor2: { value: new THREE.Color('#2BD2FF') },
-      uColor3: { value: new THREE.Color('#7B2FBE') },
-    }),
-    []
-  );
+  const trailCtx = useMemo(() => trailCanvas?.getContext('2d'), [trailCanvas]);
+  const trailTexture = useMemo(() => {
+    if (trailCanvas) return new THREE.CanvasTexture(trailCanvas);
+    return null;
+  }, [trailCanvas]);
+
+  const mouse = useRef({ x: -1000, y: -1000 });
+  const lastMouse = useRef({ x: -1000, y: -1000 });
+  const isDrawing = useRef(false);
+
+  useEffect(() => {
+    if (!trailCanvas) return;
+
+    const handleResize = () => {
+      trailCanvas.width = window.innerWidth;
+      trailCanvas.height = window.innerHeight;
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.current = { x: e.clientX, y: e.clientY };
+      isDrawing.current = true;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches && e.touches.length > 0) {
+        mouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        isDrawing.current = true;
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [trailCanvas]);
+
+  const uniforms = useMemo(() => ({
+    uTime: { value: 0 },
+    uResolution: { value: new THREE.Vector2(1, 1) },
+    uColor1: { value: new THREE.Color('#FF3CAC') }, // Pink
+    uColor2: { value: new THREE.Color('#2BD2FF') }, // Cyan
+    uColor3: { value: new THREE.Color('#7B2FBE') }, // Violet
+    uTrailTexture: { value: trailTexture } // Mengirim kanvas 2D ke GPU WebGL
+  }), [trailTexture]);
 
   useFrame((state) => {
+    if (!trailCtx || !trailCanvas || !trailTexture) return;
+
+    // 1. Evaporasi Jejak: Mengisi kanvas dengan warna hitam transparan (memudar pelan)
+    trailCtx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+    trailCtx.fillRect(0, 0, trailCanvas.width, trailCanvas.height);
+
+    // 2. Menggambar Tinta Kursor
+    if (isDrawing.current) {
+      const dx = mouse.current.x - lastMouse.current.x;
+      const dy = mouse.current.y - lastMouse.current.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // Hanya menggambar jika kursor bergeser, mencegah penumpukan di satu titik
+      if (dist > 1.0) {
+        const gradient = trailCtx.createRadialGradient(
+          mouse.current.x, mouse.current.y, 0,
+          mouse.current.x, mouse.current.y, 65 // Ukuran Kuas
+        );
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 1.0)'); // Inti terang
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.0)'); // Pinggiran halus
+
+        trailCtx.fillStyle = gradient;
+        trailCtx.beginPath();
+        trailCtx.arc(mouse.current.x, mouse.current.y, 65, 0, Math.PI * 2);
+        trailCtx.fill();
+
+        lastMouse.current = { ...mouse.current };
+      }
+    }
+
+    // 3. Memaksa GPU untuk memperbarui tekstur dari Kanvas 2D
+    trailTexture.needsUpdate = true;
+
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value = state.clock.elapsedTime * 0.15;
-      
-      // Kunci 1: Kirim ukuran layar asli ke Shader untuk rasio aspek kursor
-      materialRef.current.uniforms.uResolution.value.set(state.size.width, state.size.height);
-      
-      // Kunci 2: LERP (Interpolasi) dipercepat sedikit agar lebih responsif
-      mouse.current.lerp(targetMouse.current, 0.1);
-      materialRef.current.uniforms.uMouse.value.copy(mouse.current);
+      materialRef.current.uniforms.uResolution.value.set(size.width, size.height);
     }
   });
 
@@ -55,15 +120,15 @@ function FluidMesh() {
 
   const fragmentShader = `
     uniform float uTime;
-    uniform vec2 uMouse;
     uniform vec2 uResolution;
-    uniform vec3 uColor1;
-    uniform vec3 uColor2;
-    uniform vec3 uColor3;
+    uniform vec3 uColor1; 
+    uniform vec3 uColor2; 
+    uniform vec3 uColor3; 
+    uniform sampler2D uTrailTexture;
     
     varying vec2 vUv;
 
-    // Simplex Noise Math (Mesin Utama Fluida)
+    // --- MATH NOISE GLSL ---
     vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
     vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
     vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
@@ -116,45 +181,57 @@ function FluidMesh() {
     }
 
     void main() {
-      vec2 uv = vUv;
+      // Koordinat Y HTML Canvas terbalik dibandingkan WebGL, kita harus membalikkannya
+      vec2 texUv = vec2(vUv.x, 1.0 - vUv.y);
       
-      // Kunci 3: Menghitung jarak kursor dengan rasio aspek layar yang benar
-      vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);
-      float mouseDist = distance(uv * aspect, uMouse * aspect);
+      // Membaca intensitas jejak dari tekstur Kanvas 2D (0.0 hingga 1.0)
+      float trail = texture2D(uTrailTexture, texUv).r;
+
+      float safeY = max(uResolution.y, 1.0);
+      vec2 aspectUv = vUv * vec2(uResolution.x / safeY, 1.0);
       
-      // Kunci 4: Radius distorsi diperbesar menjadi 0.4, kekuatan tarikan 0.2
-      float warpStrength = smoothstep(0.4, 0.0, mouseDist);
-      vec2 warpedUv = uv + (uv - uMouse) * warpStrength * 0.2;
+      // ─── 1. TRAIL DISTORTION (VORTICITY) ───
+      // Menggunakan jejak kursor untuk mendistorsi (memutar) ruang WebGL secara organik
+      vec2 offset = vec2(
+        snoise(vec3(aspectUv * 3.0, uTime * 1.5)),
+        snoise(vec3(aspectUv * 3.0 + 10.0, uTime * 1.5))
+      );
+      vec2 warpedUv = aspectUv + offset * trail * 0.25; 
       
-      // Render cairan menggunakan koordinat yang sudah didistorsi
-      float noise1 = snoise(vec3(warpedUv * 1.5, uTime));
-      float noise2 = snoise(vec3(warpedUv * 2.5 + 3.0, uTime * 1.2));
-      float noise3 = snoise(vec3(warpedUv * 1.8 + 7.0, uTime * 0.8));
+      // ─── 2. ENGINE CAIRAN BOLD ───
+      float n1 = snoise(vec3(warpedUv * 1.2, uTime * 0.12));
+      float n2 = snoise(vec3(warpedUv * 2.0 + n1, uTime * 0.15));
+      float n3 = snoise(vec3(warpedUv * 1.5 - n2, uTime * 0.1));
       
-      vec3 color = mix(uColor1, uColor2, smoothstep(-0.3, 0.6, noise1));
-      color = mix(color, uColor3, smoothstep(0.1, 0.8, noise2) * 0.4);
+      vec3 fluidColor = mix(uColor1, uColor2, smoothstep(-0.3, 0.3, n2));
+      fluidColor = mix(fluidColor, uColor3, smoothstep(0.0, 0.5, n3));
+      fluidColor = clamp(fluidColor * 1.25, 0.0, 1.0); 
       
-      // Kunci 5: Menambahkan efek Glow putih yang sangat tegas tepat di bawah kursor
-      float mouseGlow = smoothstep(0.15, 0.0, mouseDist) * 0.3;
-      color += vec3(mouseGlow); // Injeksi cahaya murni
+      vec3 baseBg = vec3(0.941, 0.941, 0.969); // #F0F0F7
+      float fluidAlpha = smoothstep(-0.6, 0.5, n1) * 0.85; 
       
-      // Blender dengan Light Lavender khas Laddify
-      vec3 baseColor = vec3(0.941, 0.941, 0.969); // #F0F0F7
-      color = mix(baseColor, color, 0.3 + 0.15 * noise3);
+      // ─── 3. TRAIL INJECTION & GLOW ───
+      // Jejak kursor memaksa warna cairan menjadi 100% tebal dan menyala (Glow)
+      fluidAlpha = clamp(fluidAlpha + trail * 1.5, 0.0, 1.0);
+      fluidColor += uColor2 * trail * 0.7; // Pancaran Cyan di area kursor
       
-      // Vignette pelindung
-      float vignette = 1.0 - length((uv - 0.5) * 1.2);
-      vignette = smoothstep(0.0, 0.7, vignette);
-      color = mix(baseColor * 0.95, color, vignette);
+      // Menambahkan inti cahaya putih murni tepat di bawah jarum kursor
+      float core = smoothstep(0.6, 1.0, trail);
+      fluidColor += vec3(1.0) * core * 0.8;
       
-      gl_FragColor = vec4(color, 1.0);
+      vec3 finalColor = mix(baseBg, fluidColor, fluidAlpha);
+
+      // Vignette
+      float vignette = 1.0 - length((vUv - 0.5) * 1.3);
+      finalColor = mix(baseBg * 0.85, finalColor, smoothstep(0.0, 1.0, vignette));
+      
+      gl_FragColor = vec4(finalColor, 1.0);
     }
   `;
 
   return (
-    <mesh ref={meshRef}>
-      {/* Menggunakan plane dengan ukuran pasti 2x2 (menutupi seluruh OrthographicCamera) */}
-      <planeGeometry args={[2, 2]} />
+    <mesh ref={meshRef} scale={[viewport.width, viewport.height, 1]}>
+      <planeGeometry args={[1, 1, 32, 32]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}
@@ -178,8 +255,7 @@ export default function AetherFlow() {
       }}
     >
       <Canvas
-        orthographic // WAJIB untuk menyesuaikan ukuran plane dengan layar
-        camera={{ position: [0, 0, 1], left: -1, right: 1, top: 1, bottom: -1, zoom: 1 }}
+        camera={{ position: [0, 0, 1], fov: 75 }}
         dpr={[1, 1.5]}
         gl={{ antialias: false, alpha: false }}
         style={{ width: '100%', height: '100%' }}
