@@ -18,12 +18,14 @@ const AetherFlow = dynamic(() => import('@/components/aether-flow'), {
   ssr: false,
 });
 
+export const SECTION_LABELS = ['Home', 'Problems', 'Services', 'Pricing', 'Studio', 'Why Us', 'Contact'];
+
 export default function Home() {
   const { activeSlide, goToSlide, totalSlides } = useSlideNavigation();
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      
+
       {/* Lapisan Bawah (Engine 3D) - Sekarang berada di z-0 */}
       <AetherFlow />
 
@@ -45,14 +47,16 @@ export default function Home() {
           <SlideContact />
         </SlideContainer>
 
-        {/* Bottom Bar: Section Indicator */}
-        <div className="absolute bottom-4 left-4 sm:left-6 z-50">
-          <div className="text-xs sm:text-sm font-bold text-[#1A1A2E]/80 uppercase tracking-widest whitespace-nowrap">
-            Section - {['Home', 'Problems', 'Services', 'Pricing', 'Studio', 'Why Us', 'Contact'][activeSlide]}
+        {/* Bottom Bar: Section Indicator (Alignment: Bawah Kiri) */}
+        <div className="absolute bottom-4 left-4 sm:left-6 z-50 pointer-events-none">
+          <div className="text-xs sm:text-sm font-bold text-[#1A1A2E] uppercase tracking-widest whitespace-nowrap flex items-center justify-start gap-2">
+            <span className="opacity-50">Section</span>
+            <span className="opacity-30">—</span>
+            <span className="opacity-90">{SECTION_LABELS[activeSlide]}</span>
           </div>
         </div>
       </div>
-      
+
     </div>
   );
 }

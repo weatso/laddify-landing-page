@@ -55,7 +55,7 @@ export default function Navbar({ activeSlide, goToSlide }: NavbarProps) {
           </button>
         </div>
 
-        {/* Nav Items (Aligned to start after the logo + spacer, matching bottom section indicator X-axis) */}
+        {/* Nav Items (Aligned to start after the logo + spacer) */}
         <div className="hidden lg:flex items-center gap-8">
           {['Home', 'Problems', 'Services', 'Pricing', 'Studio', 'Why Us', 'Contact'].map(
             (label, i) => (

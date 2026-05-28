@@ -4,7 +4,6 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
-/* ─── Fluid Mesh Component ─── */
 function FluidMesh() {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -15,7 +14,6 @@ function FluidMesh() {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       targetMouse.current.x = e.clientX / window.innerWidth;
-      // Invert Y because WebGL UV origin is bottom-left
       targetMouse.current.y = 1.0 - (e.clientY / window.innerHeight);
     };
     window.addEventListener('mousemove', handleMouseMove);
@@ -26,10 +24,10 @@ function FluidMesh() {
     () => ({
       uTime: { value: 0 },
       uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+      uResolution: { value: new THREE.Vector2(1, 1) },
       uColor1: { value: new THREE.Color('#FF3CAC') },
       uColor2: { value: new THREE.Color('#2BD2FF') },
       uColor3: { value: new THREE.Color('#7B2FBE') },
-      uResolution: { value: new THREE.Vector2(1, 1) },
     }),
     []
   );
@@ -37,11 +35,12 @@ function FluidMesh() {
   useFrame((state) => {
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value = state.clock.elapsedTime * 0.15;
-      const { width, height } = state.viewport;
-      materialRef.current.uniforms.uResolution.value.set(width, height);
       
-      // Smooth interpolation for mouse
-      mouse.current.lerp(targetMouse.current, 0.05);
+      // Kunci 1: Kirim ukuran layar asli ke Shader untuk rasio aspek kursor
+      materialRef.current.uniforms.uResolution.value.set(state.size.width, state.size.height);
+      
+      // Kunci 2: LERP (Interpolasi) dipercepat sedikit agar lebih responsif
+      mouse.current.lerp(targetMouse.current, 0.1);
       materialRef.current.uniforms.uMouse.value.copy(mouse.current);
     }
   });
@@ -54,16 +53,17 @@ function FluidMesh() {
     }
   `;
 
-    const fragmentShader = `
+  const fragmentShader = `
     uniform float uTime;
+    uniform vec2 uMouse;
+    uniform vec2 uResolution;
     uniform vec3 uColor1;
     uniform vec3 uColor2;
     uniform vec3 uColor3;
-    uniform vec2 uResolution;
-    uniform vec2 uMouse;
+    
     varying vec2 vUv;
 
-    // Simplex-like noise
+    // Simplex Noise Math (Mesin Utama Fluida)
     vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
     vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
     vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
@@ -118,25 +118,31 @@ function FluidMesh() {
     void main() {
       vec2 uv = vUv;
       
-      float noise1 = snoise(vec3(uv * 1.5, uTime));
-      float noise2 = snoise(vec3(uv * 2.5 + 3.0, uTime * 1.2));
-      float noise3 = snoise(vec3(uv * 1.8 + 7.0, uTime * 0.8));
+      // Kunci 3: Menghitung jarak kursor dengan rasio aspek layar yang benar
+      vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);
+      float mouseDist = distance(uv * aspect, uMouse * aspect);
       
-      // Calculate mouse interaction (gentle highlight)
-      float mouseDist = length(uv - uMouse);
-      float mouseGlow = smoothstep(0.4, 0.0, mouseDist) * 0.2;
+      // Kunci 4: Radius distorsi diperbesar menjadi 0.4, kekuatan tarikan 0.2
+      float warpStrength = smoothstep(0.4, 0.0, mouseDist);
+      vec2 warpedUv = uv + (uv - uMouse) * warpStrength * 0.2;
+      
+      // Render cairan menggunakan koordinat yang sudah didistorsi
+      float noise1 = snoise(vec3(warpedUv * 1.5, uTime));
+      float noise2 = snoise(vec3(warpedUv * 2.5 + 3.0, uTime * 1.2));
+      float noise3 = snoise(vec3(warpedUv * 1.8 + 7.0, uTime * 0.8));
       
       vec3 color = mix(uColor1, uColor2, smoothstep(-0.3, 0.6, noise1));
       color = mix(color, uColor3, smoothstep(0.1, 0.8, noise2) * 0.4);
       
-      // Add mouse glow
-      color += mouseGlow * vec3(1.0, 1.0, 1.0);
+      // Kunci 5: Menambahkan efek Glow putih yang sangat tegas tepat di bawah kursor
+      float mouseGlow = smoothstep(0.15, 0.0, mouseDist) * 0.3;
+      color += vec3(mouseGlow); // Injeksi cahaya murni
       
-      // Soft base blend with white/lavender
+      // Blender dengan Light Lavender khas Laddify
       vec3 baseColor = vec3(0.941, 0.941, 0.969); // #F0F0F7
       color = mix(baseColor, color, 0.3 + 0.15 * noise3);
       
-      // Subtle vignette
+      // Vignette pelindung
       float vignette = 1.0 - length((uv - 0.5) * 1.2);
       vignette = smoothstep(0.0, 0.7, vignette);
       color = mix(baseColor * 0.95, color, vignette);
@@ -146,32 +152,34 @@ function FluidMesh() {
   `;
 
   return (
-    <mesh ref={meshRef} scale={[10, 10, 1]}>
-      <planeGeometry args={[2, 2, 1, 1]} />
+    <mesh ref={meshRef}>
+      {/* Menggunakan plane dengan ukuran pasti 2x2 (menutupi seluruh OrthographicCamera) */}
+      <planeGeometry args={[2, 2]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
         uniforms={uniforms}
+        depthWrite={false}
       />
     </mesh>
   );
 }
 
-/* ─── Aether Flow Canvas ─── */
 export default function AetherFlow() {
   return (
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 0,             // Kunci: Ubah dari -10 ke 0
-        pointerEvents: 'none', // Kunci: Mencegah WebGL memblokir klik UI
+        zIndex: 0,
+        pointerEvents: 'none', 
         background: '#F0F0F7',
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 1], fov: 75 }}
+        orthographic // WAJIB untuk menyesuaikan ukuran plane dengan layar
+        camera={{ position: [0, 0, 1], left: -1, right: 1, top: 1, bottom: -1, zoom: 1 }}
         dpr={[1, 1.5]}
         gl={{ antialias: false, alpha: false }}
         style={{ width: '100%', height: '100%' }}
