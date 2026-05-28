@@ -2,19 +2,21 @@
 
 import { motion } from 'framer-motion';
 
+import { Zap, ShieldCheck, Activity } from 'lucide-react';
+
 const strengths = [
   {
-    icon: '⚡',
+    icon: <Zap className="w-6 h-6 text-[#1A1A2E]" />,
     title: 'Speed',
     description: 'Rapid execution. Your campaigns launch in days, not weeks.',
   },
   {
-    icon: '🔒',
+    icon: <ShieldCheck className="w-6 h-6 text-[#1A1A2E]" />,
     title: 'Security',
     description: 'Your brand data and assets are protected with enterprise-grade security.',
   },
   {
-    icon: '📊',
+    icon: <Activity className="w-6 h-6 text-[#1A1A2E]" />,
     title: 'Transparent',
     description: 'Real-time dashboards. No black-box reporting. You see everything.',
   },

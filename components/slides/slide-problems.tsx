@@ -2,23 +2,25 @@
 
 import { motion } from 'framer-motion';
 
+import { TrendingDown, BarChart2, Banknote } from 'lucide-react';
+
 const problems = [
   {
-    icon: '📉',
+    icon: <TrendingDown className="w-10 h-10 text-[#FF3CAC]" />,
     title: 'Low Engagement',
     description: 'Your content gets views but zero action. Likes don\'t convert. Comments are dead.',
     stat: '< 1%',
     statLabel: 'engagement rate',
   },
   {
-    icon: '📊',
+    icon: <BarChart2 className="w-10 h-10 text-[#2BD2FF]" />,
     title: 'Stagnant Growth',
     description: 'Followers have plateaued for months. Your audience isn\'t expanding anymore.',
     stat: '0%',
     statLabel: 'monthly growth',
   },
   {
-    icon: '💸',
+    icon: <Banknote className="w-10 h-10 text-[#7B2FBE]" />,
     title: 'Wasted Ad Spend',
     description: 'You\'re burning budget on ads with no visible ROI. Every rupiah counts, but none come back.',
     stat: '???',

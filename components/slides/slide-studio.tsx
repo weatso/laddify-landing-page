@@ -2,21 +2,23 @@
 
 import { motion } from 'framer-motion';
 
+import { Palette, FileText, Sparkles } from 'lucide-react';
+
 const studioServices = [
   {
-    icon: '🎨',
+    icon: <Palette className="w-10 h-10 text-[#7B2FBE]" />,
     title: 'Brand Identity',
     description: 'Complete logo system, color palette, typography guide, and comprehensive brand book.',
     items: ['Logo System', 'Color Palette', 'Typography', 'Brand Book'],
   },
   {
-    icon: '📑',
+    icon: <FileText className="w-10 h-10 text-[#7B2FBE]" />,
     title: 'Company Profile',
     description: 'Premium presentation decks, annual reports, and investor-ready materials.',
     items: ['Pitch Deck', 'Annual Report', 'Corporate Deck', 'Investor Materials'],
   },
   {
-    icon: '✨',
+    icon: <Sparkles className="w-10 h-10 text-[#7B2FBE]" />,
     title: 'Creative Assets',
     description: 'Key visuals, motion graphics, social media templates, and campaign creatives.',
     items: ['Key Visuals', 'Motion Graphics', 'Templates', 'Campaign Assets'],

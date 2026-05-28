@@ -1,17 +1,31 @@
 'use client';
 
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 /* ─── Fluid Mesh Component ─── */
 function FluidMesh() {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
+  
+  const mouse = useRef(new THREE.Vector2(0.5, 0.5));
+  const targetMouse = useRef(new THREE.Vector2(0.5, 0.5));
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      targetMouse.current.x = e.clientX / window.innerWidth;
+      // Invert Y because WebGL UV origin is bottom-left
+      targetMouse.current.y = 1.0 - (e.clientY / window.innerHeight);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
+      uMouse: { value: new THREE.Vector2(0.5, 0.5) },
       uColor1: { value: new THREE.Color('#FF3CAC') },
       uColor2: { value: new THREE.Color('#2BD2FF') },
       uColor3: { value: new THREE.Color('#7B2FBE') },
@@ -25,6 +39,10 @@ function FluidMesh() {
       materialRef.current.uniforms.uTime.value = state.clock.elapsedTime * 0.15;
       const { width, height } = state.viewport;
       materialRef.current.uniforms.uResolution.value.set(width, height);
+      
+      // Smooth interpolation for mouse
+      mouse.current.lerp(targetMouse.current, 0.05);
+      materialRef.current.uniforms.uMouse.value.copy(mouse.current);
     }
   });
 
@@ -36,12 +54,13 @@ function FluidMesh() {
     }
   `;
 
-  const fragmentShader = `
+    const fragmentShader = `
     uniform float uTime;
     uniform vec3 uColor1;
     uniform vec3 uColor2;
     uniform vec3 uColor3;
     uniform vec2 uResolution;
+    uniform vec2 uMouse;
     varying vec2 vUv;
 
     // Simplex-like noise
@@ -103,8 +122,15 @@ function FluidMesh() {
       float noise2 = snoise(vec3(uv * 2.5 + 3.0, uTime * 1.2));
       float noise3 = snoise(vec3(uv * 1.8 + 7.0, uTime * 0.8));
       
+      // Calculate mouse interaction (gentle highlight)
+      float mouseDist = length(uv - uMouse);
+      float mouseGlow = smoothstep(0.4, 0.0, mouseDist) * 0.2;
+      
       vec3 color = mix(uColor1, uColor2, smoothstep(-0.3, 0.6, noise1));
       color = mix(color, uColor3, smoothstep(0.1, 0.8, noise2) * 0.4);
+      
+      // Add mouse glow
+      color += mouseGlow * vec3(1.0, 1.0, 1.0);
       
       // Soft base blend with white/lavender
       vec3 baseColor = vec3(0.941, 0.941, 0.969); // #F0F0F7
@@ -139,7 +165,8 @@ export default function AetherFlow() {
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: -10,
+        zIndex: 0,             // Kunci: Ubah dari -10 ke 0
+        pointerEvents: 'none', // Kunci: Mencegah WebGL memblokir klik UI
         background: '#F0F0F7',
       }}
     >
