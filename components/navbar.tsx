@@ -30,6 +30,7 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 );
 
 import { useState } from 'react';
+import { smoothScrollTo } from '@/lib/scroll';
 
 const MagneticNavItem = ({ label, onClick }: { label: string; onClick: () => void }) => {
   const ref = useRef<HTMLButtonElement>(null);
@@ -86,7 +87,12 @@ export default function Navbar({ activeSlide, goToSlide }: NavbarProps) {
   const navItems = ['Home', 'Problems', 'Services', 'Pricing', 'Studio', 'Why Us', 'Contact'];
 
   const handleMobileNav = (index: number) => {
-    goToSlide(index);
+    const container = document.getElementById('mobile-scroll-container');
+    if (container) {
+      smoothScrollTo(`section-${index}`, undefined, 900);
+    } else {
+      goToSlide(index);
+    }
     setIsMenuOpen(false);
   };
 
@@ -103,7 +109,14 @@ export default function Navbar({ activeSlide, goToSlide }: NavbarProps) {
           {/* Logo */}
           <div className="flex-none">
             <button
-              onClick={() => goToSlide(0)}
+              onClick={() => {
+                const container = document.getElementById('mobile-scroll-container');
+                if (container) {
+                  container.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                  goToSlide(0);
+                }
+              }}
               className="relative flex items-center cursor-pointer h-10 w-24 sm:h-12 sm:w-28"
               aria-label="Go to home"
             >

@@ -7,8 +7,8 @@ import * as THREE from 'three';
 const SECTION_CONFIG = [
   // 0: Home (Hero)
   { model: '/3d/ChibiPoo.glb', scale: 4.0, position: [-1.2, -2.1, -0.7], rotationY: -2 },
-  // 1: Problems
-  { model: '/3d/ChibiPoo_shocked.glb', scale: 2.0, position: [1.5, 1.0, -1.0], rotationY: -2 },
+  // 1: Problems - Disesuaikan agar tidak terlalu intrusif, posisi di kanan atas konten
+  { model: '/3d/ChibiPoo_shocked.glb', scale: 1.5, position: [2.0, 1.2, -0.5], rotationY: -2 },
   // 2: Services
   { model: '/3d/ChibiPoo_cheeky.glb', scale: 1.8, position: [0, -1.5, -0.5], rotationY: -2 },
   // 3: Pricing
@@ -29,30 +29,18 @@ const MODEL_PATHS = [
   '/3d/ChibiPoo_cry.glb',
 ];
 
-// Komponen internal untuk satu model 3D
-function SingleModel({ path, visible }: { path: string; visible: boolean }) {
-  const { scene } = useGLTF(path, true);
-
-  // Clone scene agar setiap instance independen
-  const clonedScene = useMemo(() => scene.clone(true), [scene]);
-
-  return (
-    <primitive object={clonedScene} visible={visible} />
-  );
-}
-
 function ChibiPooModel({ activeSlide, isMobile }: { activeSlide: number; isMobile: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const targetGroupRef = useRef<THREE.Group>(null);
   const modelsRef = useRef<THREE.Group>(null);
 
-  // State machine untuk transisi
-  const transitionState = useRef<'idle' | 'spinning-out' | 'spinning-in'>('idle');
-  const spinProgress = useRef(0);
+  // State machine untuk transisi pop
+  const transitionState = useRef<'idle' | 'popping-out' | 'popping-in'>('idle');
+  const transitionProgress = useRef(0);
   const prevSlideRef = useRef(activeSlide);
   const currentModelIndex = useRef(activeSlide);
   const targetModelIndex = useRef(activeSlide);
-  const baseRotationY = useRef(SECTION_CONFIG[0].rotationY);
+  const transitionScale = useRef(1.0);
 
   // Deteksi perubahan slide
   useEffect(() => {
@@ -60,13 +48,13 @@ function ChibiPooModel({ activeSlide, isMobile }: { activeSlide: number; isMobil
       const newConfig = SECTION_CONFIG[activeSlide] || SECTION_CONFIG[0];
       const oldConfig = SECTION_CONFIG[prevSlideRef.current] || SECTION_CONFIG[0];
 
-      // Jika model berubah, mulai transisi spin
+      // Jika model berubah, mulai transisi pop
       if (newConfig.model !== oldConfig.model) {
-        transitionState.current = 'spinning-out';
-        spinProgress.current = 0;
+        transitionState.current = 'popping-out';
+        transitionProgress.current = 0;
         targetModelIndex.current = activeSlide;
       } else {
-        // Model sama, langsung pindah posisi (no spin transition needed)
+        // Model sama, langsung pindah posisi
         currentModelIndex.current = activeSlide;
       }
 
@@ -79,36 +67,32 @@ function ChibiPooModel({ activeSlide, isMobile }: { activeSlide: number; isMobil
 
     const config = SECTION_CONFIG[activeSlide] || SECTION_CONFIG[0];
 
-    // === TRANSISI SPIN ===
-    const spinSpeed = 3.5; // Kecepatan putaran (lebih tinggi = lebih cepat)
+    // === TRANSISI POP (Scale down -> Swap -> Scale up) ===
+    const popSpeed = 5.0; // Kecepatan pop
 
-    if (transitionState.current === 'spinning-out') {
-      spinProgress.current += delta * spinSpeed;
-      
-      // Tambah rotasi ekstra (putar 180° dulu — membelakangi kamera)
-      const extraRotation = Math.min(spinProgress.current, 1.0) * Math.PI;
-      baseRotationY.current = (SECTION_CONFIG[prevSlideRef.current]?.rotationY ?? 0) + extraRotation;
+    if (transitionState.current === 'popping-out') {
+      transitionProgress.current += delta * popSpeed;
+      transitionScale.current = Math.max(1.0 - transitionProgress.current, 0.0);
 
-      // Di titik 50% (sudah membelakangi kamera), swap model
-      if (spinProgress.current >= 1.0) {
+      // Di titik 0 scale, swap model
+      if (transitionProgress.current >= 1.0) {
         currentModelIndex.current = targetModelIndex.current;
-        transitionState.current = 'spinning-in';
-        spinProgress.current = 0;
+        transitionState.current = 'popping-in';
+        transitionProgress.current = 0;
       }
-    } else if (transitionState.current === 'spinning-in') {
-      spinProgress.current += delta * spinSpeed;
+    } else if (transitionState.current === 'popping-in') {
+      transitionProgress.current += delta * popSpeed;
+      
+      // Overshoot scale up (bouncy effect)
+      const t = Math.min(transitionProgress.current, 1.0);
+      const c4 = (2 * Math.PI) / 3;
+      const bouncyScale = t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+      
+      transitionScale.current = bouncyScale;
 
-      // Lanjutkan putaran 180° lagi (total 360°) menuju rotationY target
-      const startRot = (SECTION_CONFIG[prevSlideRef.current]?.rotationY ?? 0) + Math.PI;
-      const endRot = config.rotationY + Math.PI * 2;
-      const t = Math.min(spinProgress.current, 1.0);
-      // Easing out cubic
-      const eased = 1 - Math.pow(1 - t, 3);
-      baseRotationY.current = startRot + (endRot - startRot) * eased;
-
-      if (spinProgress.current >= 1.0) {
+      if (transitionProgress.current >= 1.0) {
         transitionState.current = 'idle';
-        baseRotationY.current = config.rotationY;
+        transitionScale.current = 1.0;
       }
     }
 
@@ -125,26 +109,23 @@ function ChibiPooModel({ activeSlide, isMobile }: { activeSlide: number; isMobil
       4 * delta
     );
 
-    // Lerp posisi dan skala model
+    // Lerp posisi dan skala base model
+    const currentBaseScale = finalScale * transitionScale.current;
     groupRef.current.scale.lerp(
-      new THREE.Vector3(finalScale, finalScale, finalScale),
-      4 * delta
+      new THREE.Vector3(currentBaseScale, currentBaseScale, currentBaseScale),
+      6 * delta // Sedikit lebih cepat agar sinkron dengan pop
     );
     groupRef.current.position.lerp(
       new THREE.Vector3(finalX, finalY, finalZ),
       4 * delta
     );
 
-    // Rotasi: jika idle, lerp normal. Jika spinning, gunakan baseRotationY
-    if (transitionState.current === 'idle') {
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y,
-        config.rotationY,
-        4 * delta
-      );
-    } else {
-      groupRef.current.rotation.y = baseRotationY.current;
-    }
+    // Rotasi: normal lerp karena spin sudah dihapus
+    groupRef.current.rotation.y = THREE.MathUtils.lerp(
+      groupRef.current.rotation.y,
+      config.rotationY,
+      4 * delta
+    );
 
     // Update visibility model berdasarkan currentModelIndex
     if (modelsRef.current) {
