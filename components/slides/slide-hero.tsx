@@ -8,7 +8,8 @@ interface SlideHeroProps {
 
 export default function SlideHero({ goToSlide }: SlideHeroProps) {
   return (
-    <div className="flex flex-col justify-end w-full h-full px-4 sm:px-6 pb-20 sm:pb-24 max-w-none uppercase overflow-hidden">
+    <div className="relative flex flex-col justify-end w-full h-full px-4 sm:px-6 pb-20 sm:pb-24 max-w-none uppercase overflow-hidden">
+      
       {/* Main Headline */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}

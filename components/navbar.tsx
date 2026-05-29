@@ -29,6 +29,8 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+import { useState } from 'react';
+
 const MagneticNavItem = ({ label, onClick }: { label: string; onClick: () => void }) => {
   const ref = useRef<HTMLButtonElement>(null);
   const x = useMotionValue(0);
@@ -80,54 +82,121 @@ const MagneticNavItem = ({ label, onClick }: { label: string; onClick: () => voi
 };
 
 export default function Navbar({ activeSlide, goToSlide }: NavbarProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navItems = ['Home', 'Problems', 'Services', 'Pricing', 'Studio', 'Why Us', 'Contact'];
+
+  const handleMobileNav = (index: number) => {
+    goToSlide(index);
+    setIsMenuOpen(false);
+  };
+
   return (
-    <motion.nav
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-      className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 sm:px-6 py-2 w-full"
-    >
-      {/* Left Section: Logo & NavItems */}
-      <div className="flex items-center gap-12 lg:gap-32">
-        {/* Logo */}
-        <div className="flex-none">
-          <button
-            onClick={() => goToSlide(0)}
-            className="relative flex items-center cursor-pointer h-10 w-20 sm:h-14 sm:w-28"
-            aria-label="Go to home"
+    <>
+      <motion.nav
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-2 sm:py-4 w-full bg-transparent"
+      >
+        {/* Left Section: Logo & NavItems */}
+        <div className="flex items-center gap-12 lg:gap-32">
+          {/* Logo */}
+          <div className="flex-none">
+            <button
+              onClick={() => goToSlide(0)}
+              className="relative flex items-center cursor-pointer h-10 w-24 sm:h-12 sm:w-28"
+              aria-label="Go to home"
+            >
+              <Image
+                src="/logo.png"
+                alt="Laddify Logo"
+                fill
+                priority
+                className="object-contain object-left"
+              />
+            </button>
+          </div>
+
+          {/* Nav Items (Desktop) */}
+          <div className="hidden lg:flex items-center gap-4">
+            {navItems.map((label, i) => (
+              <MagneticNavItem key={label} label={label} onClick={() => goToSlide(i)} />
+            ))}
+          </div>
+        </div>
+
+        {/* Right Section: Social Icons & Mobile Menu Button */}
+        <div className="flex flex-none items-center gap-4 sm:gap-6">
+          <div className="hidden sm:flex items-center gap-4 sm:gap-6">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-[#1A1A2E]/60 hover:text-[#FF3CAC] transition-colors">
+              <InstagramIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+            </a>
+            <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" className="text-[#1A1A2E]/60 hover:text-[#FF3CAC] transition-colors">
+              <TikTokIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+            </a>
+            <a href="https://wa.me/6281805877845" target="_blank" rel="noopener noreferrer" className="text-[#1A1A2E]/60 hover:text-[#FF3CAC] transition-colors">
+              <WhatsAppIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+            </a>
+          </div>
+          
+          {/* Mobile Hamburger Button */}
+          <button 
+            className="lg:hidden flex flex-col items-center justify-center w-10 h-10 gap-1.5 z-50 relative bg-[#1A1A2E]/5 rounded-full"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
           >
-            <Image
-              src="/logo.png"
-              alt="Laddify Logo"
-              fill
-              priority
-              className="object-contain object-left"
+            <motion.span 
+              animate={isMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
+              className="w-5 h-0.5 bg-[#1A1A2E] block transition-transform"
+            />
+            <motion.span 
+              animate={isMenuOpen ? { opacity: 0 } : { opacity: 1 }}
+              className="w-5 h-0.5 bg-[#1A1A2E] block transition-opacity"
+            />
+            <motion.span 
+              animate={isMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
+              className="w-5 h-0.5 bg-[#1A1A2E] block transition-transform"
             />
           </button>
         </div>
+      </motion.nav>
 
-        {/* Nav Items (Aligned to start after the logo + spacer) */}
-        <div className="hidden lg:flex items-center gap-4">
-          {['Home', 'Problems', 'Services', 'Pricing', 'Studio', 'Why Us', 'Contact'].map(
-            (label, i) => (
-              <MagneticNavItem key={label} label={label} onClick={() => goToSlide(i)} />
-            )
-          )}
-        </div>
-      </div>
-
-      {/* Right Section: Social Icons */}
-      <div className="flex flex-none items-center gap-6">
-        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-[#1A1A2E]/60 hover:text-[#FF3CAC] transition-colors">
-          <InstagramIcon className="w-6 h-6 sm:w-8 sm:h-8" />
-        </a>
-        <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" className="text-[#1A1A2E]/60 hover:text-[#FF3CAC] transition-colors">
-          <TikTokIcon className="w-6 h-6 sm:w-8 sm:h-8" />
-        </a>
-        <a href="https://wa.me/6281805877845" target="_blank" rel="noopener noreferrer" className="text-[#1A1A2E]/60 hover:text-[#FF3CAC] transition-colors">
-          <WhatsAppIcon className="w-6 h-6 sm:w-8 sm:h-8" />
-        </a>
-      </div>
-    </motion.nav>
+      {/* Mobile Menu Overlay */}
+      {isMenuOpen && (
+        <motion.div
+          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          animate={{ opacity: 1, backdropFilter: 'blur(20px)' }}
+          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          className="fixed inset-0 z-40 bg-white/80 flex flex-col items-center justify-center"
+        >
+          <div className="flex flex-col items-center gap-6 text-2xl font-extrabold text-[#1A1A2E]">
+            {navItems.map((label, i) => (
+              <motion.button
+                key={label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.05 }}
+                onClick={() => handleMobileNav(i)}
+                className="hover:text-[#FF3CAC] transition-colors"
+              >
+                {label}
+              </motion.button>
+            ))}
+          </div>
+          
+          <div className="flex items-center gap-6 mt-12">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-[#1A1A2E] hover:text-[#FF3CAC] transition-colors">
+              <InstagramIcon className="w-8 h-8" />
+            </a>
+            <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" className="text-[#1A1A2E] hover:text-[#FF3CAC] transition-colors">
+              <TikTokIcon className="w-8 h-8" />
+            </a>
+            <a href="https://wa.me/6281805877845" target="_blank" rel="noopener noreferrer" className="text-[#1A1A2E] hover:text-[#FF3CAC] transition-colors">
+              <WhatsAppIcon className="w-8 h-8" />
+            </a>
+          </div>
+        </motion.div>
+      )}
+    </>
   );
 }

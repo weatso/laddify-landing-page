@@ -18,6 +18,10 @@ const AetherFlow = dynamic(() => import('@/components/aether-flow'), {
   ssr: false,
 });
 
+const ChibiPooScene = dynamic(() => import('@/components/chibi-poo-scene'), {
+  ssr: false,
+});
+
 export const SECTION_LABELS = ['Home', 'Problems', 'Services', 'Pricing', 'Studio', 'Why Us', 'Contact'];
 
 export default function Home() {
@@ -28,6 +32,11 @@ export default function Home() {
 
       {/* Lapisan Bawah (Engine 3D) - Sekarang berada di z-0 */}
       <AetherFlow />
+
+      {/* Lapisan Global 3D ChibiPoo - Persistent di semua slide */}
+      <div className="absolute inset-0 z-[5] pointer-events-none">
+        <ChibiPooScene activeSlide={activeSlide} />
+      </div>
 
       {/* Lapisan Atas (Sistem UI & Navigasi) - Dikunci di z-10 */}
       <div className="relative z-10 w-full h-full flex flex-col">

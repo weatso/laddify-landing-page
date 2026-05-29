@@ -7,7 +7,7 @@ import * as THREE from 'three';
 function FluidMesh() {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
-  const { viewport, size } = useThree();
+  const { size } = useThree();
 
   // ─── ENGINE 1: 2D CANVAS TRAIL SYSTEM (PENGGANTI FBO YANG AMAN) ───
   const trailCanvas = useMemo(() => {
@@ -22,7 +22,11 @@ function FluidMesh() {
 
   const trailCtx = useMemo(() => trailCanvas?.getContext('2d'), [trailCanvas]);
   const trailTexture = useMemo(() => {
-    if (trailCanvas) return new THREE.CanvasTexture(trailCanvas);
+    if (trailCanvas) {
+      const tex = new THREE.CanvasTexture(trailCanvas);
+      tex.flipY = false; // Matikan flipY: kita tangani sendiri di shader
+      return tex;
+    }
     return null;
   }, [trailCanvas]);
 
@@ -181,10 +185,9 @@ function FluidMesh() {
     }
 
     void main() {
-      // Koordinat Y HTML Canvas terbalik dibandingkan WebGL, kita harus membalikkannya
+      // flipY=false, jadi kita balik Y secara manual:
+      // Canvas 2D: y=0 di atas. WebGL UV: v=0 di bawah.
       vec2 texUv = vec2(vUv.x, 1.0 - vUv.y);
-      
-      // Membaca intensitas jejak dari tekstur Kanvas 2D (0.0 hingga 1.0)
       float trail = texture2D(uTrailTexture, texUv).r;
 
       float safeY = max(uResolution.y, 1.0);
@@ -230,8 +233,8 @@ function FluidMesh() {
   `;
 
   return (
-    <mesh ref={meshRef} scale={[viewport.width, viewport.height, 1]}>
-      <planeGeometry args={[1, 1, 32, 32]} />
+    <mesh ref={meshRef}>
+      <planeGeometry args={[2, 2]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}
@@ -255,7 +258,8 @@ export default function AetherFlow() {
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 1], fov: 75 }}
+        orthographic
+        camera={{ position: [0, 0, 1], left: -1, right: 1, top: 1, bottom: -1, zoom: 1 }}
         dpr={[1, 1.5]}
         gl={{ antialias: false, alpha: false }}
         style={{ width: '100%', height: '100%' }}

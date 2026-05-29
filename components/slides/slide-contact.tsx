@@ -23,7 +23,7 @@ export default function SlideContact() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center max-w-xl mx-auto w-full">
+    <div className="flex flex-col items-center max-w-xl mx-auto w-full">
       {/* Section Title */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

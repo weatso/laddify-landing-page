@@ -59,7 +59,7 @@ const cardVariants = {
 
 export default function SlideAuthority() {
   return (
-    <div className="flex flex-col items-center justify-center max-w-5xl mx-auto w-full">
+    <div className="flex flex-col items-center max-w-5xl mx-auto w-full">
       {/* Section Title */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -81,7 +81,7 @@ export default function SlideAuthority() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-3 gap-4 w-full mb-8"
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full mb-8"
       >
         {strengths.map((strength) => (
           <motion.div

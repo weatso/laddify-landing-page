@@ -44,7 +44,7 @@ const cardVariants = {
 
 export default function SlideProblems() {
   return (
-    <div className="flex flex-col items-center justify-center max-w-5xl mx-auto w-full">
+    <div className="flex flex-col items-center max-w-5xl mx-auto w-full">
       {/* Section Title */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -66,7 +66,7 @@ export default function SlideProblems() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full"
+        className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full"
       >
         {problems.map((problem) => (
           <motion.div

@@ -38,7 +38,7 @@ export default function SlideContainer({
   goToSlide,
 }: SlideContainerProps) {
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
+    <div className="relative w-full h-full flex items-center justify-center pt-14 sm:pt-16 pb-8">
       {/* Slide Content */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -51,7 +51,7 @@ export default function SlideContainer({
             duration: 0.5,
             ease: [0.25, 0.46, 0.45, 0.94],
           }}
-          className="w-full h-full flex items-center justify-center px-2 sm:px-4"
+          className="w-full h-full flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-y-auto overflow-x-hidden py-4"
         >
           {children[activeSlide]}
         </motion.div>
