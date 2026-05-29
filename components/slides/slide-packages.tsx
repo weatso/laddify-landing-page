@@ -241,9 +241,9 @@ export default function SlidePackages({ goToSlide }: SlidePackagesProps) {
         <AnimatePresence>
           {activeCategory === 'SMM' && (
             <motion.div 
-              initial={{ opacity: 0, height: 0, mt: 0 }}
-              animate={{ opacity: 1, height: 'auto', mt: 12 }}
-              exit={{ opacity: 0, height: 0, mt: 0 }}
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
               className="inline-flex items-center p-1 rounded-full bg-[#1A1A2E]/5 overflow-hidden"
             >
               <button
