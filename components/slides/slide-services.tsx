@@ -64,19 +64,19 @@ const cardVariants = {
 
 export default function SlideServices() {
   return (
-    <div className="flex flex-col items-center max-w-6xl mx-auto w-full">
+    <div className="flex flex-col items-center justify-center max-w-6xl mx-auto w-full h-full max-h-full overflow-y-auto scrollbar-hide px-2 sm:px-0 pb-4">
       {/* Section Title */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.5 }}
-        className="text-center mb-6 sm:mb-8"
+        className="text-center mb-4 sm:mb-6 flex-shrink-0"
       >
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#1A1A2E] mb-2 sm:mb-3">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#1A1A2E] mb-2">
           The Laddify{' '}
           <span className="gradient-text">Growth Engine</span>
         </h2>
-        <p className="text-[#6B7280] text-sm sm:text-base max-w-xl mx-auto">
+        <p className="text-[#6B7280] text-xs sm:text-sm max-w-xl mx-auto">
           Six integrated service pillars engineered to scale your brand — not just manage it.
         </p>
       </motion.div>
@@ -86,14 +86,14 @@ export default function SlideServices() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full pb-4"
       >
         {services.map((service) => (
           <motion.div
             key={service.title}
             variants={cardVariants}
             transition={{ duration: 0.4 }}
-            className="glass-card-hover p-5 sm:p-6 flex flex-col group relative overflow-hidden"
+            className="glass-card-hover p-4 sm:p-5 flex flex-col group relative overflow-hidden"
           >
             {/* Gradient border glow on hover */}
             <div className="absolute inset-0 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
@@ -103,17 +103,17 @@ export default function SlideServices() {
             />
 
             {/* Header: Number + Icon */}
-            <div className="flex items-center justify-between mb-4 relative z-10">
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center text-white`}>
+            <div className="flex items-center justify-between mb-3 relative z-10">
+              <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center text-white`}>
                 {service.icon}
               </div>
-              <span className="text-2xl font-extrabold text-[#1A1A2E]/10 group-hover:text-[#1A1A2E]/20 transition-colors">
+              <span className="text-xl font-extrabold text-[#1A1A2E]/10 group-hover:text-[#1A1A2E]/20 transition-colors">
                 {service.number}
               </span>
             </div>
 
             {/* Title */}
-            <h3 className="text-sm sm:text-base font-bold text-[#1A1A2E] mb-3 relative z-10 leading-snug">
+            <h3 className="text-sm font-bold text-[#1A1A2E] mb-2 relative z-10 leading-snug">
               {service.title}
             </h3>
 
@@ -122,7 +122,7 @@ export default function SlideServices() {
               {service.features.map((feature) => (
                 <span
                   key={feature}
-                  className="text-[10px] sm:text-xs font-medium px-2.5 py-1 rounded-full bg-[#1A1A2E]/5 text-[#1A1A2E]/70"
+                  className="text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md bg-[#1A1A2E]/5 text-[#1A1A2E]/70"
                 >
                   {feature}
                 </span>

@@ -13,8 +13,8 @@ export function smoothScrollTo(elementId: string | null, targetPosition?: number
   } else if (elementId) {
     const targetElement = document.getElementById(elementId);
     if (targetElement) {
-      // Offset by 80px to account for the navbar height
-      to = targetElement.offsetTop - 80;
+      // Offset by 100px to account for the navbar height and extra breathing room
+      to = targetElement.offsetTop - 100;
     } else {
       return;
     }

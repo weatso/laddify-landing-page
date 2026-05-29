@@ -88,7 +88,7 @@ export default function Home() {
           /* Mobile/Tablet: Vertical Scrollable Layout */
           <div id="mobile-scroll-container" className="flex-1 w-full overflow-y-auto scroll-smooth pt-20 pb-12 px-4 sm:px-6">
             
-            <section id="section-0" className="min-h-[85vh] flex flex-col items-center justify-center relative mb-16">
+            <section id="section-0" className="min-h-[85vh] flex flex-col justify-end relative mb-16">
                {/* 3D Model specifically for Mobile Hero */}
                <div className="absolute inset-0 z-0 pointer-events-none h-full w-full">
                   <ChibiPooScene activeSlide={0} />
@@ -98,12 +98,12 @@ export default function Home() {
                </div>
             </section>
 
-            <section id="section-1" className="py-16 w-full mb-10"><SlideProblems /></section>
-            <section id="section-2" className="py-16 w-full mb-10"><SlideServices /></section>
-            <section id="section-3" className="py-16 w-full mb-10"><SlidePackages goToSlide={handleMobileScroll} /></section>
-            <section id="section-4" className="py-16 w-full mb-10"><SlideStudio /></section>
-            <section id="section-5" className="py-16 w-full mb-10"><SlideAuthority /></section>
-            <section id="section-6" className="py-16 w-full"><SlideContact /></section>
+            <section id="section-1" className="min-h-screen flex items-center justify-center w-full py-20"><SlideProblems /></section>
+            <section id="section-2" className="min-h-screen flex items-center justify-center w-full py-20"><SlideServices /></section>
+            <section id="section-3" className="min-h-screen flex items-center justify-center w-full py-20"><SlidePackages goToSlide={handleMobileScroll} /></section>
+            <section id="section-4" className="min-h-screen flex items-center justify-center w-full py-20"><SlideStudio /></section>
+            <section id="section-5" className="min-h-screen flex items-center justify-center w-full py-20"><SlideAuthority /></section>
+            <section id="section-6" className="min-h-screen flex items-center justify-center w-full py-20"><SlideContact /></section>
             
           </div>
         )}

@@ -2,103 +2,65 @@
 
 import { motion } from 'framer-motion';
 
-import { Palette, FileText, Sparkles } from 'lucide-react';
-
-const studioServices = [
-  {
-    icon: <Palette className="w-10 h-10 text-[#7B2FBE]" />,
-    title: 'Brand Identity',
-    description: 'Complete logo system, color palette, typography guide, and comprehensive brand book.',
-    items: ['Logo System', 'Color Palette', 'Typography', 'Brand Book'],
-  },
-  {
-    icon: <FileText className="w-10 h-10 text-[#7B2FBE]" />,
-    title: 'Company Profile',
-    description: 'Premium presentation decks, annual reports, and investor-ready materials.',
-    items: ['Pitch Deck', 'Annual Report', 'Corporate Deck', 'Investor Materials'],
-  },
-  {
-    icon: <Sparkles className="w-10 h-10 text-[#7B2FBE]" />,
-    title: 'Creative Assets',
-    description: 'Key visuals, motion graphics, social media templates, and campaign creatives.',
-    items: ['Key Visuals', 'Motion Graphics', 'Templates', 'Campaign Assets'],
-  },
-];
-
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.15,
-    },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0 },
-};
-
 export default function SlideStudio() {
   return (
-    <div className="flex flex-col items-center max-w-5xl mx-auto w-full">
-      {/* Section Title */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.5 }}
-        className="text-center mb-10"
-      >
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#7B2FBE]/10 text-[#7B2FBE] text-xs font-bold mb-4">
-          <span>BRAND STUDIO</span>
-        </div>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1A1A2E] mb-3">
-          Beyond Social —{' '}
-          <span className="gradient-text-purple">Build Your Brand DNA</span>
-        </h2>
-        <p className="text-[#6B7280] text-base sm:text-lg max-w-lg mx-auto">
-          Elevate your brand presence with premium creative and strategic assets.
-        </p>
-      </motion.div>
+    <div className="flex flex-col items-center justify-center max-w-4xl mx-auto w-full h-full min-h-[60vh]">
+      {/* Mystical Background Accents */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
+        <div className="w-64 h-64 sm:w-96 sm:h-96 bg-[#7B2FBE]/10 blur-[100px] rounded-full absolute -top-10 -left-10" />
+        <div className="w-64 h-64 sm:w-96 sm:h-96 bg-[#FF3CAC]/10 blur-[100px] rounded-full absolute bottom-10 right-10" />
+      </div>
 
-      {/* Studio Service Cards */}
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full"
+        initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+        animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+        transition={{ duration: 1, ease: 'easeOut' }}
+        className="text-center relative z-10 flex flex-col items-center"
       >
-        {studioServices.map((service) => (
-          <motion.div
-            key={service.title}
-            variants={cardVariants}
-            transition={{ duration: 0.5 }}
-            className="glass-card-hover p-7 flex flex-col group relative overflow-hidden"
-          >
-            {/* Purple accent glow */}
-            <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-[#7B2FBE]/5 blur-2xl group-hover:bg-[#7B2FBE]/10 transition-colors duration-500" />
+        <p className="text-[10px] sm:text-xs font-bold tracking-[0.3em] text-[#7B2FBE] uppercase mb-4 sm:mb-6">
+          The Unseen Architecture
+        </p>
+        
+        <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black text-[#1A1A2E] mb-6 sm:mb-8 tracking-tight leading-none">
+          Not just cases.<br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF3CAC] via-[#7B2FBE] to-[#2BD2FF]">
+            Legends.
+          </span>
+        </h2>
+        
+        <p className="text-sm sm:text-base text-[#6B7280] max-w-lg mx-auto mb-10 sm:mb-14 leading-relaxed px-4">
+          Dive into our immersive case studies. See how we architect growth, engineer virality, and transform ordinary brands into digital powerhouses.
+        </p>
+
+        {/* The Mysterious Button */}
+        <motion.a
+          href="/studio"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="group relative inline-flex items-center justify-center cursor-pointer"
+        >
+          {/* Button Outer Glow */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FF3CAC] via-[#7B2FBE] to-[#2BD2FF] rounded-full blur-md opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
+          
+          {/* Button Inner */}
+          <div className="relative flex items-center gap-3 px-8 sm:px-10 py-3 sm:py-4 bg-[#1A1A2E] rounded-full text-white text-xs sm:text-sm font-bold tracking-widest uppercase overflow-hidden">
+            {/* Button inner shine effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
             
-            <span className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 relative z-10">
-              {service.icon}
-            </span>
-            <h3 className="text-lg font-bold text-[#1A1A2E] mb-2 relative z-10">
-              {service.title}
-            </h3>
-            <p className="text-sm text-[#6B7280] mb-5 leading-relaxed relative z-10">
-              {service.description}
-            </p>
-            <div className="mt-auto grid grid-cols-2 gap-1.5 relative z-10">
-              {service.items.map((item) => (
-                <span
-                  key={item}
-                  className="text-xs font-medium px-2.5 py-1 rounded-lg bg-[#7B2FBE]/5 text-[#7B2FBE]/80 text-center"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-        ))}
+            <span>Enter Studio</span>
+            <svg 
+              className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2.5" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </div>
+        </motion.a>
       </motion.div>
     </div>
   );
